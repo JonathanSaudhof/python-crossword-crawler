@@ -2,6 +2,7 @@ import multiprocessing
 import requests
 from bs4 import BeautifulSoup
 import json
+from time import time
 result={}
 result["data"]=[]
 baseUrl: str = "https://www.kreuzwort-raetsel.com"
@@ -29,7 +30,7 @@ def getPageQuestions(page):
     # global progress
     # progress+=1
     # print("progress 3", progress)
-
+    global result
   
     html = requests.get("https://www.kreuzwort-raetsel.com/f/?Question_page=" + str(page)).content
     soup = BeautifulSoup(html, "lxml") 
@@ -42,14 +43,18 @@ def getPageQuestions(page):
         data["answers"] = getQuestionAnswers(baseUrl + rowTd[0].a.get("href"))
         r.append(data)
     # print(r)
-    result["data"].append(r)
+    result["data"].extend(r)
     
 
 
 if __name__ == '__main__':
     # print("progress 2", progress)
+    t0=time()
     pool = multiprocessing.Pool()
-    pool.map(getPageQuestions, range(1,1751))
+    pool.map(getPageQuestions, range(1,3))
     pool.close()
+    t1=time()
+    print(f"lasted time: {(t1-t0)}s")
+    print(f"data length{len(result['data'])}")
     with open('data.json', 'w') as outfile:
         json.dump(result, outfile)
