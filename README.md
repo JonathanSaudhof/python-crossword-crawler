@@ -9,7 +9,7 @@ Do it as fast as possible!
 ## Challenges:
 1. Unfortunately I had to follow a nested link to get the answers. 
 2. Started synchronously and moved to asyncio to improve the crawl speed
-3. Struggled with connection los due to server time outs and DDoS prevention.
+3. Struggled with connection loss due to server timeouts and DDoS prevention.
 4. Dealed with caching the already crawled data to not crawl them again.
 
 ## Comment:
