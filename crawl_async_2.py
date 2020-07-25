@@ -83,7 +83,7 @@ async def getPageQuestions(page, loop):
     for answer,row in answers:
         res = getQuestionAnswers(answer)
         # fill in the answer to the result page list
-        r[row]["answer"] = res
+        r[row]["answers"] = res
     # open the output file to store the page into the file
     with open('./data_a.json', 'r+') as outfile:
         # read data from json
