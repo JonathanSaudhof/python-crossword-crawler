@@ -1,7 +1,10 @@
 # python-crossword-crawler
-
 My first attempt to get into python again after 3 years. 
 The crawler gets all questions and related answers for a crossword game from a german site.
+
+## Task:
+Get all the 175 000+ questions and nested answers from a page to build a crossword riddle generator for fun. 
+Do it as fast as possible! 
 
 ## Challenges:
 1. Unfortunately I had to follow a nested link to get the answers. 
