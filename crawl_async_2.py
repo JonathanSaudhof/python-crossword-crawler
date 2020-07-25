@@ -3,9 +3,11 @@ import asyncio
 from bs4 import BeautifulSoup
 import json
 import time
+import os
 
 from time import time, sleep
 import uvloop
+from json.decoder import JSONDecodeError
 
 import gc
 uvloop.install()
@@ -46,24 +48,15 @@ async def get_answer(url, row):
     return (res.text, row)
 
 async def getPageQuestions(page, loop):
+    
     global result
     global progress
     r = []
     tasks = []
-    with open('data_a.json','r') as jsonfile:
-        
-        data=json.load(jsonfile)
-        jsonfile.close()
-  
-    if str(page) in data:
-        
-        progress += 1
-        print(f'Page {page} already exists |  Progress: {progress}/{round(progress/1752*100,2)}%')
-        return
-    
-    print(f'page {page} requested!')
     tstart={}
     tend={}
+
+    print(f'page {page} requested!')
     
     html = await get_html("https://www.kreuzwort-raetsel.com/f/?Question_page=" + str(page))
     soup = BeautifulSoup(html, "lxml") 
@@ -71,11 +64,11 @@ async def getPageQuestions(page, loop):
     tasks =[]
     for i,row in enumerate(rows):
         rowTd = row.findAll("td")
-        data = {}
-        data["question"] = rowTd[0].a.string      
+        rowData = {}
+        rowData["question"] = rowTd[0].a.string      
         task = loop.create_task(get_answer(baseUrl + rowTd[0].a.get("href"), i))
         tasks.append(task)
-        r.append(data)
+        r.append(rowData)
 
     print(f'Awaiting Answers for Page: {page}')
     tstart[page] = time()
@@ -87,37 +80,54 @@ async def getPageQuestions(page, loop):
     for answer,row in answers:
         res = getQuestionAnswers(answer)
         r[row]["answer"] = res
-        # print(f'#{row} , {r[row]}' )
-        
-    gc.collect()
+        # print(f'#{row} , {r[row]}' )        
+   
+    #read data from json
     with open('./data_a.json', 'r+') as outfile:
         data = json.load(outfile)
         data.update({page: r})
         outfile.seek(0)
-        json.dump(data, outfile)
+        json.dump(data, outfile, indent=4)
         outfile.close
         
+    gc.collect()   
     tend[page] = time()
     print(f'Received Answers! Duration for page {page}: {round(tend[page] - tstart[page],2)}s | Progress: {progress}/{round(progress/1752*100,2)}%')
 
     
 async def main():
+    global progress
     tasks=[]
     loop = asyncio.get_event_loop()
 
     print('STARTED!')
-      
-    for i in range(1,1752):
-        tasks.append(loop.create_task(getPageQuestions(i,loop)))
-        if i % 10 == 0:
-           await asyncio.sleep(1)
+
+        
+  
+    with open('data_a.json','r') as jsonfile:
+        
+        pages=json.load(jsonfile)
+        jsonfile.close()
+  
+    
+    
+    for i in range(200,210):
+        if str(i) in pages:
+            progress += 1
+            print(f'Page {i} already exists |  Progress: {progress}/{round(progress/1752*100,2)}%')
+        else:
+            tasks.append(loop.create_task(getPageQuestions(i,loop)))
+            await asyncio.sleep(0.1)
 
     try:
         await asyncio.gather(*tasks)
-    except:
-        print(f'Error: start again!')
-        await main()
+    # except:
+    #     print(f'Error: start again!')
+    #     print(sys.exc_info()[0])
+    #     sleep(3)
+    #     await main()
     finally:  
+        jsonfile.close()
         await httpClient1.aclose()
         print('FINISHED!')
     
